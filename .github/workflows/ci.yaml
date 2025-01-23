@@ -1,8 +1,8 @@
----
 name: "Deploy EC2 Instance"
 
-"on":
-  push: { branches: [main] }
+on:
+  push:
+    branches: [main]
 
 jobs:
   terraform:
@@ -13,12 +13,15 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Check out code
         uses: actions/checkout@v2
         
-      - uses: hashicorp/setup-terraform@v1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 0.14.4
 
@@ -47,8 +50,9 @@ jobs:
         id: output
         uses: actions/github-script@v3
         if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          script: |
+            core.exportVariable("PLAN", `terraform\n${{ steps.plan.outputs.stdout }}`)
 
       - name: Terraform apply
         id: apply
