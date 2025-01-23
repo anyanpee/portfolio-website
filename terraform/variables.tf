@@ -1,7 +1,3 @@
-variable "account_id" {
-  description = "AWS Account ID"
-}
-
 variable "region" {
   description = "AWS Region"
   default = "us-east-1"
@@ -9,4 +5,5 @@ variable "region" {
 
 variable "project_prefix" {
   description = "Project Prefix"
+  default = "artifact-peter"
 }
