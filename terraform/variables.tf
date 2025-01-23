@@ -1,4 +1,12 @@
-variable "acme_s3_logging_bucket" {
-  description = "The s3 logging bucket"
-  default = "acme-s3-access-bucket"
+variable "account_id" {
+  description = "AWS Account ID"
+}
+
+variable "region" {
+  description = "AWS Region"
+  default = "us-east-1"
+}
+
+variable "project_prefix" {
+  description = "Project Prefix"
 }
