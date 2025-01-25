@@ -27,6 +27,16 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   }
 }
 
+locals {
+  mime_types = {
+    "html" = "text/html"
+    "css"  = "text/css"
+    "svg"   = "image/svg+xml"
+    "png"  = "image/png"
+    "jpg"  = "image/jpeg"
+    "jpeg" = "image/jpeg"
+  }
+}
 
 
 resource "aws_s3_object" "upload_object" {
@@ -35,6 +45,11 @@ resource "aws_s3_object" "upload_object" {
   key      = each.value
   etag     = filemd5("../portfolio/${each.value}")
   source   = "../portfolio/${each.value}"
+  content_type = lookup(
+    local.mime_types,
+    regex("^.*(\\.[^./]*)$", each.value)[0],
+    "application/octet-stream"
+  )
 }
 
 resource "aws_s3_bucket_policy" "policy" {
