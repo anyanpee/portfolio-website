@@ -5,5 +5,5 @@ variable "region" {
 
 variable "project_prefix" {
   description = "Project Prefix"
-  default = "artifact-peter"
+  default = "peter-anyankpele-portfolio"
 }

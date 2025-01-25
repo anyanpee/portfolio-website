@@ -1,4 +1,4 @@
-name: Deploy Terraform
+name: Deploy Portfolio Website
 
 on:
   push:
@@ -7,16 +7,14 @@ on:
 
 jobs:
   terraform:
-    name: Deploy Terraform Job
+    name: Deploy Portfolio Website
     runs-on: ubuntu-latest
     env:
       working-directory: terraform
     steps:
-      # Pulls the latest version of your code from the GitHub repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Installs Terraform on the GitHub runner
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
           
@@ -26,28 +24,19 @@ jobs:
           aws-region: "eu-west-1"
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      
-      - name: Print Working Directory
-        run: pwd
-
-      - name: List Files
-        run: ls -la
-
-      # Initialize terraform
+    
       - name: Initialize Terraform
         run: terraform init
         working-directory: ${{ env.working-directory }}
 
-      # Execute the terraform plan
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ${{ env.working-directory }}
+
       - name: Terraform Plan
         run: terraform plan
         working-directory: ${{ env.working-directory }}
 
-      # Deploy terraform changes
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: ${{ env.working-directory }}
-
-      # Destroy terraform resources (uncomment lines below)
-      # - name: Terraform Destroy
-      #   run: terraform destroy -auto-approve

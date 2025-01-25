@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<!--
+	Aerial by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title id="title"></title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<div id="wrapper">
+			<div id="bg"></div>
+			<div id="overlay"></div>
+			<div id="main">
+
+				<!-- Header -->
+					<header id="header">
+						<h1 id="name"></h1>
+						<p id="profession"></p>
+						<p id="contact"></p>
+						<nav>
+							<ul>
+								<li><a href="#" id="email" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
+							</ul>
+						</nav>
+					</header>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<span class="copyright">&copy; <span id="owner"></span>. Design: <a href="http://html5up.net">HTML5 UP</a>.</span>
+					</footer>
+
+			</div>
+		</div>
+		<script>
+			const data = {
+				title: "Peter Anyankpele's Portfolio",
+				name: "Peter Anyankpele",
+				profession: "DevOps Engineer&nbsp;&bull;",
+				contact: "Let's Connect: +00-xxxxxx",
+				email: "mailto:test@gmail.com",
+				owner: "This site is owned and operated by Peter Anyankpele"
+			};
+
+			document.getElementById('title').textContent = data.title;
+			document.getElementById('name').textContent = data.name;
+			document.getElementById('profession').innerHTML = data.profession;
+			document.getElementById('contact').textContent = data.contact;
+			document.getElementById('email').href = data.email;
+			document.getElementById('owner').textContent = data.owner;
+
+			window.onload = function() { document.body.classList.remove('is-preload'); }
+			window.ontouchmove = function() { return false; }
+			window.onorientationchange = function() { document.body.scrollTop = 0; }
+		</script>
+	</body>
+</html>
