@@ -30,11 +30,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
 
 
 resource "aws_s3_object" "upload_object" {
-  for_each     = fileset("../portfolio/", "**")
-  bucket       = aws_s3_bucket.bucket.id
-  key          = each.value
-  etag         = filemd5("../portfolio/${each.value}")
-  
+  for_each = fileset("../portfolio/", "**")
+  bucket   = aws_s3_bucket.bucket.id
+  key      = each.value
+  etag     = filemd5("../portfolio/${each.value}")
+  source   = "../portfolio/${each.value}"
 }
 
 resource "aws_s3_bucket_policy" "policy" {
