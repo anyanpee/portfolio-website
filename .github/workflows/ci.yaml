@@ -25,18 +25,28 @@ jobs:
           aws-region: "eu-west-1"
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          
+      
+      - name: Print Working Directory
+        run: pwd
+        working-directory: ${{ GITHUB_WORKSPACE }}
+
+      - name: List Files
+        run: ls -la
+
       # Initialize terraform
       - name: Initialize Terraform
         run: terraform init
+        working-directory: ${{ GITHUB_WORKSPACE }}
 
       # Execute the terraform plan
       - name: Terraform Plan
         run: terraform plan
+        working-directory: ${{ GITHUB_WORKSPACE }}
 
       # Deploy terraform changes
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        working-directory: ${{ GITHUB_WORKSPACE }}
 
       # Destroy terraform resources (uncomment lines below)
       # - name: Terraform Destroy
