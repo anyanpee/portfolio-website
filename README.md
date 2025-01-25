@@ -1,50 +1,208 @@
-# terraform-github-actions
-terraform aws github action workflow example with tests
+# Portfolio Website Deployment with GitHub Actions and Terraform
 
-Contains an example workflow for terraform and github actions incorporating:
-- terrascan for security scanning before running terraform  
-- inspec for testing after running terraform 
+## Overview
+This project automates the deployment of a portfolio website to AWS S3 using **Terraform** and **GitHub Actions**. The setup ensures a smooth CI/CD pipeline and secure, highly available infrastructure for hosting static websites.
 
-This provides a simple terraform workflow that includes tests. 
-Example uses terraform workspaces and AWS assume roles. 
+---
 
-The approach is on a pull request the workflow is run without the terraform apply and when it is merged with main branch the terraform apply is also run.  
+## Project Structure
+```
+project-root/
+|— .github/
+|   — workflows/
+|       — ci.yml  # GitHub Actions workflow file
+|— terraform/
+|   — main.tf         # Terraform configuration
+|— portfolio/
+    — index.html      # Website files
+```
 
-NOTE: It is recommended to run this on your hosted github runners rather than github's runners so you keep your AWS credentials out of github. 
+---
 
+## Features
+- **Terraform** for Infrastructure as Code (IaC): Automates the setup of AWS resources.
+- **GitHub Actions**: Automates the deployment process upon changes to the `main` branch.
+- **AWS S3**: Hosts the static portfolio website with public access and HTTPS support.
+- **Encryption**: Ensures data security with server-side encryption.
 
-## Repository Contents 
+---
 
-### profile directory 
+## Deployment Workflow
+1. **Trigger**: The workflow starts when you push changes to the `main` branch.
+2. **Setup**:
+    - Terraform initializes the infrastructure.
+    - AWS credentials are securely configured via GitHub secrets.
+3. **Validation**: Terraform validates and plans the infrastructure changes.
+4. **Deployment**: Terraform applies the configuration to deploy the portfolio website.
 
-Contains an example inspec test against AWS. you need to be authenticated against a valid AWS account to run the tests 
+---
 
-### terraform directory 
+## GitHub Actions Workflow
+**File:** `.github/workflows/ci.yml`
+```yaml
+name: Deploy Portfolio Website
 
-Contains a test project with known bad terraform to run tfsec against.
+on:
+  push:
+    branches:
+      - main
 
-Uses S3 buckets for testing example 
+jobs:
+  terraform:
+    name: Deploy Portfolio Website
+    runs-on: ubuntu-latest
+    env:
+      working-directory: terraform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-This project has a number of issues that are known to fail tfsec checks.
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: "eu-west-1"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-## Usage 
+      - name: Initialize Terraform
+        run: terraform init
+        working-directory: ${{ env.working-directory }}
 
-- git clone repo 
-- create a new branch 
-- push changes to github 
-- Create Pull Request and see github action CI workflow run  
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ${{ env.working-directory }}
 
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: ${{ env.working-directory }}
 
-## References 
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.working-directory }}
+```
 
-- [Continuous Integration with GitHub Actions and Terraform](https://wahlnetwork.com/2020/05/12/continuous-integration-with-github-actions-and-terraform/)
-- [WahlNetwork/github-action-terraform](https://github.com/WahlNetwork/github-action-terraform)
-- [Automate Terraform with GitHub Actions](https://learn.hashicorp.com/tutorials/terraform/github-actions)
-- [Automated Terraform Deployments to AWS with Github Actions](https://medium.com/@dnorth98/automated-terraform-deployments-to-aws-with-github-actions-c590c065c179)
+---
 
-- [Terrascan Documentation](https://docs.accurics.com/projects/accurics-terrascan/en/latest/)
-- [terrascan-action](https://github.com/accurics/terrascan-action)
-- [Terrascan GitHub Action: Easy Policy as Code for IaC Pipelines](https://www.accurics.com/blog/devops-blog/terrascan-github-action-policy-as-code-for-iac-pipelines/)
+## Terraform Configuration
+**File:** `terraform/main.tf`
+```hcl
+resource "aws_s3_bucket" "bucket" {
+  bucket        = var.project_prefix
+  force_destroy = true
+}
 
-- [inspec-aws](https://github.com/inspec/inspec-aws)
-- [InSpec Resources Reference](https://docs.chef.io/inspec/resources/)
+resource "aws_s3_bucket_website_configuration" "portfolio" {
+  bucket = aws_s3_bucket.bucket.id
+  index_document {
+    suffix = "index.html"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "permissions" {
+  bucket                  = aws_s3_bucket.bucket.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
+  bucket = aws_s3_bucket.bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+locals {
+  mime_types = {
+    "html" = "text/html"
+    "css"  = "text/css"
+    "svg"  = "image/svg+xml"
+    "png"  = "image/png"
+    "jpg"  = "image/jpeg"
+    "jpeg" = "image/jpeg"
+  }
+}
+
+resource "aws_s3_object" "upload_object" {
+  for_each = fileset("../portfolio/", "**")
+  bucket   = aws_s3_bucket.bucket.id
+  key      = each.value
+  etag     = filemd5("../portfolio/${each.value}")
+  source   = "../portfolio/${each.value}"
+  content_type = lookup(
+    local.mime_types,
+    split(".", each.value)[1],
+    ""
+  )
+}
+
+resource "aws_s3_bucket_policy" "policy" {
+  bucket = aws_s3_bucket.bucket.id
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "PublicReadGetObject",
+        "Effect" : "Allow",
+        "Principal" : "*",
+        "Action" : [
+          "s3:GetObject"
+        ],
+        "Resource" : [
+          "arn:aws:s3:::${aws_s3_bucket.bucket.id}/*"
+        ]
+      }
+    ]
+  })
+}
+
+output "s3_website_endpoint" {
+  value = aws_s3_bucket.bucket.website_endpoint
+}
+```
+
+---
+
+## How to Use
+
+### Prerequisites
+- **AWS Account**: Ensure you have an AWS account and the necessary IAM permissions.
+- **GitHub Repository**: Store your project files in a GitHub repository.
+- **Terraform Installed**: Install Terraform locally if needed for manual testing.
+- **GitHub Secrets**:
+  - `AWS_ACCESS_KEY_ID`: Your AWS access key.
+  - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key.
+
+### Steps
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd project-root
+   ```
+2. Push changes to the `main` branch.
+3. Monitor the GitHub Actions workflow for deployment logs.
+4. Access the deployed portfolio website using the `s3_website_endpoint` output.
+
+---
+
+## Outputs
+- **S3 Website Endpoint**: URL to access the hosted portfolio website, e.g., `http://<bucket-name>.s3-website-<region>.amazonaws.com`.
+
+---
+
+## Notes
+- **Costs**: Ensure you monitor AWS usage to avoid unexpected charges.
+- **Security**: Use environment variables and IAM roles to enhance security.
+- **Customization**: Modify the `portfolio/` folder to update your website content.
+
+---
+
+## Contributing
+Feel free to fork the repository and submit a pull request for improvements or new features.
+
