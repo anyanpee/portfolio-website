@@ -39,7 +39,7 @@ resource "aws_s3_object" "upload_object" {
   for_each     = fileset("../portfolio/", "*")
   bucket       = aws_s3_bucket.bucket.id
   key          = each.value
-  etag         = filemd5("portfolio/${each.value}")
+  etag         = filemd5("../portfolio/${each.value}")
   content_type = "text/html"
 }
 
