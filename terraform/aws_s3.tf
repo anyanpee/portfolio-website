@@ -15,7 +15,7 @@ resource "aws_s3_bucket_public_access_block" "permissions" {
   block_public_acls       = false
   block_public_policy     = false
   ignore_public_acls      = false
-  restrict_public_buckets = fasle
+  restrict_public_buckets = false
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
@@ -61,4 +61,9 @@ resource "aws_s3_bucket_policy" "policy" {
       }
     ]
   })
+}
+
+
+output "s3_website_endpoint" {
+  value = aws_s3_bucket.bucket.website_endpoint
 }
