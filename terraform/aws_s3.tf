@@ -31,7 +31,7 @@ locals {
   mime_types = {
     "html" = "text/html"
     "css"  = "text/css"
-    "svg"   = "image/svg+xml"
+    "svg"  = "image/svg+xml"
     "png"  = "image/png"
     "jpg"  = "image/jpeg"
     "jpeg" = "image/jpeg"
@@ -47,8 +47,8 @@ resource "aws_s3_object" "upload_object" {
   source   = "../portfolio/${each.value}"
   content_type = lookup(
     local.mime_types,
-    regex("^.*(\\.[^./]*)$", each.value)[0],
-    "application/octet-stream"
+    split(".", each.value)[1],
+    ""
   )
 }
 
