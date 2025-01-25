@@ -9,7 +9,8 @@ jobs:
   terraform:
     name: Deploy Terraform Job
     runs-on: ubuntu-latest
-
+    env:
+      working-directory: terraform
     steps:
       # Pulls the latest version of your code from the GitHub repository
       - name: Checkout code
@@ -28,7 +29,6 @@ jobs:
       
       - name: Print Working Directory
         run: pwd
-        working-directory: ${{ GITHUB_WORKSPACE }}
 
       - name: List Files
         run: ls -la
@@ -36,17 +36,17 @@ jobs:
       # Initialize terraform
       - name: Initialize Terraform
         run: terraform init
-        working-directory: ${{ GITHUB_WORKSPACE }}
+        working-directory: ${{ env.working-directory }}
 
       # Execute the terraform plan
       - name: Terraform Plan
         run: terraform plan
-        working-directory: ${{ GITHUB_WORKSPACE }}
+        working-directory: ${{ env.working-directory }}
 
       # Deploy terraform changes
       - name: Terraform Apply
         run: terraform apply -auto-approve
-        working-directory: ${{ GITHUB_WORKSPACE }}
+        working-directory: ${{ env.working-directory }}
 
       # Destroy terraform resources (uncomment lines below)
       # - name: Terraform Destroy
